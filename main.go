@@ -10,7 +10,7 @@ import (
 	"github.com/edgexfoundry/app-functions-sdk-go/pkg/transforms"
 	"github.com/edgexfoundry/app-functions-sdk-go/pkg/util"
 
-	awsTransforms "github.com/zhanglt/thingsboard-export/transforms"
+	awsTransforms "transforms"
 )
 
 const (
