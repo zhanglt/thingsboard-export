@@ -15,26 +15,29 @@ import (
 )
 
 const (
-	awsIoTMQTTHost           = "AwsIoTMQTTHost"
-	awsIoTMQTTPort           = "AwsIoTMQTTPort"
-	awsIoTThingName          = "awsIoTThingName"
-	awsIoTRootCAFilename     = "CaCertPath"
-	awsIoTCertFilename       = "MQTTCert"
-	awsIoTPrivateKeyFilename = "MQTTKey"
-	awsSkipCertVerify        = "SkipCertVerify"
-	awsPersistOnError        = "PersistOnError"
-	awsDeviceNames           = "AwsDeviceNames"
-	user                     = "someUser"
-	topic                    = "topic"
+	tbIOTMQTTProtocol       = "tbIOTMQTTProtocol"
+	tbIOTMQTTHost           = "tbIOTMQTTHost"
+	tbIOTMQTTPort           = "tbIOTMQTTPort"
+	tbUserName              = "TBIoTMQTTUserName"
+	topic                   = "topic"
+	tbIOTThingName          = "tbIOTThingName"
+	tbIOTRootCAFilename     = "CaCertPath"
+	tbIOTCertFilename       = "MQTTCert"
+	tbIOTPrivateKeyFilename = "MQTTKey"
+	tbSkipCertVerify        = "SkipCertVerify"
+	tbPersistOnError        = "PersistOnError"
+	tbDeviceNames           = "TbDeviceNames"
 )
 
 var log logger.LoggingClient
 
-// AWSMQTTConfig holds AWS IoT specific information
-type AWSMQTTConfig struct {
+// TBMQTTConfig holds TB IoT specific information
+type TBMQTTConfig struct {
 	MQTTConfig     sdkTransforms.MqttConfig
+	IoTProtocol    string
 	IoTHost        string
 	IoTPort        string
+	IoTUserName    string
 	IoTDevice      string
 	IoTTopic       string
 	DeviceNames    string
@@ -62,43 +65,47 @@ func getAppSetting(settings map[string]string, name string) string {
 
 }
 
-// LoadAWSMQTTConfig Loads the mqtt configuration necessary to connect to AWS cloud
-func LoadAWSMQTTConfig(sdk *appsdk.AppFunctionsSDK) (*AWSMQTTConfig, error) {
+// LoadTBMQTTConfig Loads the mqtt configuration necessary to connect to Thingsboard
+func LoadTBMQTTConfig(sdk *appsdk.AppFunctionsSDK) (*TBMQTTConfig, error) {
 	if sdk == nil {
 		return nil, errors.New("Invalid AppFunctionsSDK")
 	}
 
 	log = sdk.LoggingClient
 
-	var ioTHost, iotPort, iotDevice, mqttCert, mqttKey, ioTTopic, deviceNames string
+	var IoTProtocol, ioTHost, iotPort, IoTUserName, iotDevice, mqttCert, mqttKey, ioTTopic, deviceNames string
 	var skipCertVerify, persistOnError bool
 	var errSkip, errPersist error
 
 	appSettings := sdk.ApplicationSettings()
 	if appSettings != nil {
-		ioTHost = getAppSetting(appSettings, awsIoTMQTTHost)
-		iotPort = getAppSetting(appSettings, awsIoTMQTTPort)
-		iotDevice = getAppSetting(appSettings, awsIoTThingName)
-		mqttCert = getAppSetting(appSettings, awsIoTCertFilename)
-		mqttKey = getAppSetting(appSettings, awsIoTPrivateKeyFilename)
+		IoTProtocol = getAppSetting(appSettings, tbIOTMQTTProtocol)
+		ioTHost = getAppSetting(appSettings, tbIOTMQTTHost)
+		iotPort = getAppSetting(appSettings, tbIOTMQTTPort)
+		IoTUserName = getAppSetting(appSettings, tbUserName)
+		iotDevice = getAppSetting(appSettings, tbIOTThingName)
+		mqttCert = getAppSetting(appSettings, tbIOTCertFilename)
+		mqttKey = getAppSetting(appSettings, tbIOTPrivateKeyFilename)
 		ioTTopic = getAppSetting(appSettings, topic)
-		deviceNames = getAppSetting(appSettings, awsDeviceNames)
-		skipCertVerify, errSkip = strconv.ParseBool(getAppSetting(appSettings, awsSkipCertVerify))
-		persistOnError, errPersist = strconv.ParseBool(getAppSetting(appSettings, awsPersistOnError))
+		deviceNames = getAppSetting(appSettings, tbDeviceNames)
+		skipCertVerify, errSkip = strconv.ParseBool(getAppSetting(appSettings, tbSkipCertVerify))
+		persistOnError, errPersist = strconv.ParseBool(getAppSetting(appSettings, tbPersistOnError))
+
 		if errSkip != nil {
-			log.Error("Unable to parse " + awsSkipCertVerify + " value")
+			log.Error("Unable to parse " + tbSkipCertVerify + " value")
 		}
 		if errPersist != nil {
-			log.Error("Unable to parse " + awsPersistOnError + " value")
+			log.Error("Unable to parse " + tbPersistOnError + " value")
 		}
 	} else {
 		return nil, errors.New("No application-specific settings found")
 	}
 
-	config := AWSMQTTConfig{}
-
+	config := TBMQTTConfig{}
+	config.IoTProtocol = IoTProtocol
 	config.IoTHost = ioTHost
 	config.IoTPort = iotPort
+	config.IoTUserName = IoTUserName
 	config.IoTDevice = iotDevice
 	config.IoTTopic = ioTTopic
 	config.DeviceNames = deviceNames
@@ -122,23 +129,23 @@ func LoadAWSMQTTConfig(sdk *appsdk.AppFunctionsSDK) (*AWSMQTTConfig, error) {
 	return &config, nil
 }
 
-// NewAWSMQTTSender return a mqtt sender capable of sending the event's value to the given MQTT broker
-func NewAWSMQTTSender(logging logger.LoggingClient, config *AWSMQTTConfig) *sdkTransforms.MQTTSender {
+// NewTBMQTTSender return a mqtt sender capable of sending the event's value to the given MQTT broker
+func NewTBMQTTSender(logging logger.LoggingClient, config *TBMQTTConfig) *sdkTransforms.MQTTSender {
 
 	logging.Debug(config.IoTTopic)
 
 	port, err := strconv.Atoi(config.IoTPort)
 	if err != nil {
-		// falling back to default AWS IoT port
-		port = 8883
+		// falling back to default TB IoT port
+		port = 1883
 	}
 
 	addressable := models.Addressable{
+		Protocol:  config.IoTProtocol,
 		Address:   config.IoTHost,
 		Port:      port,
-		Protocol:  "tls",
 		Publisher: config.IoTDevice,
-		User:      "",
+		User:      config.IoTUserName,
 		Password:  "",
 		Topic:     config.IoTTopic,
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/edgexfoundry/app-functions-sdk-go/pkg/transforms"
 	"github.com/edgexfoundry/app-functions-sdk-go/pkg/util"
 
-	awsTransforms "github.com/zhanglt/thingsboard-export/transforms"
+	tbTransforms "github.com/zhanglt/thingsboard-export/transforms"
 )
 
 const (
@@ -30,7 +30,7 @@ func main() {
 
 	// 2) Load AWS-specific MQTT configuration from App SDK
 	// You can also create AWSMQTTConfig struct yourself
-	config, err := awsTransforms.LoadAWSMQTTConfig(edgexSdk)
+	config, err := tbTransforms.LoadTBMQTTConfig(edgexSdk)
 	if err != nil {
 		edgexSdk.LoggingClient.Error(fmt.Sprintf("Failed to load AWS MQTT configurations: %v\n", err))
 		os.Exit(-1)
@@ -44,11 +44,11 @@ func main() {
 	// execute every time an event is triggered.
 	edgexSdk.SetFunctionsPipeline(
 		transforms.NewFilter(deviceNamesCleaned).FilterByDeviceName,
-		awsTransforms.NewConversion().TransformToAWS,
-		printAWSDataToConsole,
-		awsTransforms.NewAWSMQTTSender(edgexSdk.LoggingClient, config).MQTTSend,
+		tbTransforms.NewConversion().TransformToTB,
+		//printTBDataToConsole,
+		tbTransforms.NewTBMQTTSender(edgexSdk.LoggingClient, config).MQTTSend,
+		//text,
 	)
-
 	// 5) Lastly, we'll go ahead and tell the SDK to "start" and begin listening for events
 	// to trigger the pipeline.
 	err = edgexSdk.MakeItRun()
@@ -62,14 +62,19 @@ func main() {
 	os.Exit(0)
 }
 
-func printAWSDataToConsole(edgexcontext *appcontext.Context, params ...interface{}) (bool, interface{}) {
+func text(edgexcontext *appcontext.Context, params ...interface{}) (bool, interface{}) {
+	fmt.Println("ssssssssssssssssss")
+	return false, nil
+}
+func printTBDataToConsole(edgexcontext *appcontext.Context, params ...interface{}) (bool, interface{}) {
 
 	if len(params) < 1 {
 		// We didn't receive a result
 		return false, nil
 	}
-
-	fmt.Println(params[0].(string))
+	for i := 0; i < len(params); i++ {
+		fmt.Println("=====================:", params[i].(string))
+	}
 
 	// Leverage the built in logging service in EdgeX
 	edgexcontext.LoggingClient.Debug("Printed to console")

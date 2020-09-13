@@ -17,11 +17,11 @@
 FROM golang:1.13-alpine AS builder
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-  copyright='Copyright (c) 2019: Intel'
+  copyright='Copyright (c) 2020: Unicom'
 
 # add git for go modules
 RUN apk update && apk add --no-cache make git gcc libc-dev libsodium-dev zeromq-dev
-WORKDIR /aws-export
+WORKDIR /thingsboard-export
 
 COPY go.mod .
 
@@ -36,7 +36,7 @@ RUN make build
 FROM alpine
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-  copyright='Copyright (c) 2019: Intel'
+  copyright='Copyright (c) 2019: Unicom'
 
 RUN apk --no-cache add zeromq
 COPY --from=builder /aws-export/res /res
