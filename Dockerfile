@@ -39,7 +39,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
   copyright='Copyright (c) 2019: Unicom'
 
 RUN apk --no-cache add zeromq
-COPY --from=builder /aws-export/res /res
-COPY --from=builder /aws-export/app-service /aws-export
+COPY --from=builder /thingsboard-export/res /res
+COPY --from=builder /thingsboard-export/app-service /thingsboard-export
 
-CMD [ "/aws-export" , "-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]
+CMD [ "/thingsboard-export" , "-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]

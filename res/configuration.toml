@@ -49,14 +49,14 @@ PublishTopic=""
 
 [ApplicationSettings]
 tbIOTMQTTProtocol   = "tcp"
-tbIOTMQTTHost       = "10.0.0.200"
-tbIOTMQTTPort       = "1883"
-TBIoTMQTTUserName   = "rftT5DEba9bm2Dm6TFb4"
-topic               = "v1/devices/me/telemetry"
+tbIOTMQTTHost       = "10.0.0.200"              #thingsboard的地址
+tbIOTMQTTPort       = "1883"                    #thingsboard的端口
+TBIoTMQTTUserName   = "rftT5DEba9bm2Dm6TFb4"    #thingsboard的设备token
+topic               = "v1/devices/me/telemetry" #thingsboard的topic
 tbIOTThingName      = "testThing"
 MQTTCert            = "./certs/user.client.crt"
 MQTTKey             = "./certs/user.client.key"
 SkipCertVerify	    = "false"
 PersistOnError	    = "false"
-TbDeviceNames       = ""
+TbDeviceNames       = "MQ_DEVICE"                #从events中以本字段（感知设备名称）为过滤条件
 
