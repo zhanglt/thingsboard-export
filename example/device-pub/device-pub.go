@@ -35,30 +35,16 @@ func main() {
 
 	var client mqtt.Client
 	var err error
-	client, err = createClient("test", "10.0.0.100:1883")
+	client, err = createClient("testID", "10.0.0.70:1883")
 	if err != nil {
 		fmt.Println("Client create:", err)
 	}
 	/*
-		msg := Message{DeviceName: "MQ_DEVICE", CmdName: "randnum", Randnum: RandFloat64(10, 100), Temperature: RandFloat64(5, 40), Humidity: RandFloat64(10, 60)}
-		b, err := json.Marshal(msg)
-		if err != nil {
-			fmt.Println("JSON ERR:", err)
-		}
-		fmt.Println(string(b))
-		//{"name":"MQ_DEVICE","cmd":"randnum","randnum":"163.7","temperature":"286.3","humidity":"323.8"}
-		client.Publish("DataTopic", 1, false, string(b))
-
-		if token := client.Publish("DataTopic", 1, false, string(b)); token.Wait() && token.Error() != nil {
-			fmt.Println(token.Error())
-		}
-
-
-			var msgRcvd := func(client *mqtt.Client, message mqtt.Message) {
+		var msgRcvd := func(client *mqtt.Client, message mqtt.Message) {
 				fmt.Printf("Received message on topic: %s\nMessage: %s\n", message.Topic(), message.Payload())
 			}
 
-			if token := c.Subscribe("example/topic", 0, msgRcvd); token.Wait() && token.Error() != nil {
+			if token := client.Subscribe("example/topic", 0, msgRcvd); token.Wait() && token.Error() != nil {
 				fmt.Println(token.Error())
 			}
 
@@ -74,8 +60,6 @@ func main() {
 		}
 		fmt.Println(string(b))
 		//{"name":"MQ_DEVICE","cmd":"randnum","randnum":"163.7","temperature":"286.3","humidity":"323.8"}
-		//client.Publish("DataTopic", 1, false, string(b))
-
 		if token := client.Publish("DataTopic", 0, false, string(b)); token.Wait() && token.Error() != nil {
 			fmt.Println(token.Error())
 		}

@@ -73,21 +73,22 @@ func LoadTBMQTTConfig(sdk *appsdk.AppFunctionsSDK) (*TBMQTTConfig, error) {
 
 	log = sdk.LoggingClient
 
-	var IoTProtocol, ioTHost, iotPort, IoTUserName, iotDevice, mqttCert, mqttKey, ioTTopic, deviceNames string
+	var mqttCert, mqttKey string
 	var skipCertVerify, persistOnError bool
 	var errSkip, errPersist error
 
 	appSettings := sdk.ApplicationSettings()
+	config := TBMQTTConfig{}
 	if appSettings != nil {
-		IoTProtocol = getAppSetting(appSettings, tbIOTMQTTProtocol)
-		ioTHost = getAppSetting(appSettings, tbIOTMQTTHost)
-		iotPort = getAppSetting(appSettings, tbIOTMQTTPort)
-		IoTUserName = getAppSetting(appSettings, tbUserName)
-		iotDevice = getAppSetting(appSettings, tbIOTThingName)
+		config.IoTProtocol = getAppSetting(appSettings, tbIOTMQTTProtocol)
+		config.IoTHost = getAppSetting(appSettings, tbIOTMQTTHost)
+		config.IoTPort = getAppSetting(appSettings, tbIOTMQTTPort)
+		config.IoTUserName = getAppSetting(appSettings, tbUserName)
+		config.IoTDevice = getAppSetting(appSettings, tbIOTThingName)
+		config.IoTTopic = getAppSetting(appSettings, topic)
+		config.DeviceNames = getAppSetting(appSettings, tbDeviceNames)
 		mqttCert = getAppSetting(appSettings, tbIOTCertFilename)
 		mqttKey = getAppSetting(appSettings, tbIOTPrivateKeyFilename)
-		ioTTopic = getAppSetting(appSettings, topic)
-		deviceNames = getAppSetting(appSettings, tbDeviceNames)
 		skipCertVerify, errSkip = strconv.ParseBool(getAppSetting(appSettings, tbSkipCertVerify))
 		persistOnError, errPersist = strconv.ParseBool(getAppSetting(appSettings, tbPersistOnError))
 
@@ -97,19 +98,11 @@ func LoadTBMQTTConfig(sdk *appsdk.AppFunctionsSDK) (*TBMQTTConfig, error) {
 		if errPersist != nil {
 			log.Error("Unable to parse " + tbPersistOnError + " value")
 		}
+		config.PersistOnError = persistOnError
+
 	} else {
 		return nil, errors.New("No application-specific settings found")
 	}
-
-	config := TBMQTTConfig{}
-	config.IoTProtocol = IoTProtocol
-	config.IoTHost = ioTHost
-	config.IoTPort = iotPort
-	config.IoTUserName = IoTUserName
-	config.IoTDevice = iotDevice
-	config.IoTTopic = ioTTopic
-	config.DeviceNames = deviceNames
-	config.PersistOnError = persistOnError
 
 	pair := &sdkTransforms.KeyCertPair{
 		KeyFile:  mqttKey,
@@ -133,13 +126,11 @@ func LoadTBMQTTConfig(sdk *appsdk.AppFunctionsSDK) (*TBMQTTConfig, error) {
 func NewTBMQTTSender(logging logger.LoggingClient, config *TBMQTTConfig) *sdkTransforms.MQTTSender {
 
 	logging.Debug(config.IoTTopic)
-
 	port, err := strconv.Atoi(config.IoTPort)
 	if err != nil {
 		// falling back to default TB IoT port
 		port = 1883
 	}
-
 	addressable := models.Addressable{
 		Protocol:  config.IoTProtocol,
 		Address:   config.IoTHost,

@@ -20,22 +20,18 @@ const (
 func main() {
 	// 关闭安全模式
 	os.Setenv("EDGEX_SECURITY_SECRET_STORE", "false")
-
 	// 1) 创建一个EdgeX SDK实例并初始化
 	edgexSdk := &appsdk.AppFunctionsSDK{ServiceKey: serviceKey}
 	if err := edgexSdk.Initialize(); err != nil {
 		edgexSdk.LoggingClient.Error(fmt.Sprintf("SDK initialization failed: %v\n", err))
 		os.Exit(-1)
 	}
-
 	// 2) 从App SDK加载thingsboard特定的MQTT配置
-
 	config, err := tbTransforms.LoadTBMQTTConfig(edgexSdk)
 	if err != nil {
 		edgexSdk.LoggingClient.Error(fmt.Sprintf("Failed to load AWS MQTT configurations: %v\n", err))
 		os.Exit(-1)
 	}
-
 	// 3) 从配置中获取设备名称过滤器
 	deviceNamesCleaned := util.DeleteEmptyAndTrim(strings.FieldsFunc(config.DeviceNames, util.SplitComma))
 	edgexSdk.LoggingClient.Debug(fmt.Sprintf("Device names read %s\n", deviceNamesCleaned))
@@ -47,7 +43,6 @@ func main() {
 		tbTransforms.NewTBMQTTSender(edgexSdk.LoggingClient, config).MQTTSend,
 		//printTBDataToConsole,
 		//text
-
 	)
 	// 5) 启动SDK并开始监听触发管道的事件。
 	err = edgexSdk.MakeItRun()
@@ -55,9 +50,7 @@ func main() {
 		edgexSdk.LoggingClient.Error("MakeItRun returned error: ", err.Error())
 		os.Exit(-1)
 	}
-
 	// Do any required cleanup here
-
 	os.Exit(0)
 }
 
@@ -66,7 +59,6 @@ func text(edgexcontext *appcontext.Context, params ...interface{}) (bool, interf
 	return false, nil
 }
 func printTBDataToConsole(edgexcontext *appcontext.Context, params ...interface{}) (bool, interface{}) {
-
 	if len(params) < 1 {
 		// We didn't receive a result
 		return false, nil
@@ -74,7 +66,6 @@ func printTBDataToConsole(edgexcontext *appcontext.Context, params ...interface{
 	for i := 0; i < len(params); i++ {
 		fmt.Println("=======:", params[i].(string))
 	}
-
 	// Leverage the built in logging service in EdgeX
 	edgexcontext.LoggingClient.Debug("Printed to console")
 
